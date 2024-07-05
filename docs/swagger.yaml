@@ -1,0 +1,320 @@
+basePath: /
+definitions:
+  models.Task:
+    description: Task represents a task in the system
+    properties:
+      duration:
+        description: Duration is the duration of the task
+        type: string
+      end_time:
+        description: EndTime is the end time of the task
+        type: string
+      id:
+        description: ID is the unique identifier of the task
+        type: integer
+      name:
+        description: Name is the name of the task
+        type: string
+      start_time:
+        description: StartTime is the start time of the task
+        type: string
+      user_id:
+        description: UserID is the ID of the user to whom the task is assigned
+        type: integer
+    type: object
+  models.User:
+    description: User represents a user in the system
+    properties:
+      email:
+        description: |-
+          Email is the email address of the user
+          @required
+          @example john.doe@example.com
+        type: string
+      first_name:
+        description: |-
+          FirstName is the first name of the user
+          @required
+          @example John
+        type: string
+      id:
+        description: ID is the unique identifier of the user
+        type: integer
+      last_name:
+        description: |-
+          LastName is the last name of the user
+          @required
+          @example Doe
+        type: string
+      passport_number:
+        description: |-
+          PassportNumber is the passport number of the user
+          @required
+          @example ABC12345
+        type: string
+      task:
+        allOf:
+        - $ref: '#/definitions/models.Task'
+        description: Task is the task associated with the user
+    type: object
+  task_handlers.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  user_handlers.Workload:
+    properties:
+      duration:
+        type: string
+      task_name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server for TodoList Application
+  title: Toda App API
+  version: "1.0"
+paths:
+  /tasks/end:
+    get:
+      description: Ends a task for the user
+      operationId: end-task
+      parameters:
+      - description: Task ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/task_handlers.ErrorResponse'
+      summary: End a task
+      tags:
+      - tasks
+  /tasks/start:
+    get:
+      description: Starts a task for the user
+      operationId: start-task
+      parameters:
+      - description: Task ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/task_handlers.ErrorResponse'
+      summary: Start a task
+      tags:
+      - tasks
+  /user/workload:
+    get:
+      description: Get user workload for a specific period
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user_handlers.Workload'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workload
+      tags:
+      - users
+  /usercreate:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided details
+      parameters:
+      - description: User to create
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new user
+      tags:
+      - users
+  /userdelete/{id}:
+    delete:
+      description: Delete a user from the database based on the provided ID
+      parameters:
+      - description: User ID to delete
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a user by ID
+      tags:
+      - users
+  /users:
+    get:
+      description: Get a list of all users with filtering and pagination
+      parameters:
+      - description: First name
+        in: query
+        name: first_name
+        type: string
+      - description: Last name
+        in: query
+        name: last_name
+        type: string
+      - description: Email
+        in: query
+        name: email
+        type: string
+      - description: Passport number
+        in: query
+        name: passport_number
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all users
+      tags:
+      - users
+  /userupdate/{userId}:
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Updated user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user data
+      tags:
+      - users
+swagger: "2.0"
